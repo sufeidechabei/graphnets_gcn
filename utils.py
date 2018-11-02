@@ -20,6 +20,7 @@ def sample_mask(idx, l):
     mask[idx] = 1
     return np.array(mask, dtype=np.bool)
 
+
 def _preprocess_features(features):
     """Row-normalize feature matrix and convert to tuple representation"""
     rowsum = np.array(features.sum(1))
@@ -50,7 +51,7 @@ def load_data(dataset_str):
     names = ['x', 'y', 'tx', 'ty', 'allx', 'ally', 'graph']
     objects = []
     for i in range(len(names)):
-        with open("C:\\users\\zhanghao\\graph_net_gcn\\datasets\\coradata\\ind.{}.{}".
+        with open("./datasets/coradata/ind.{}.{}".
                   format(dataset_str, names[i]), 'rb') as f:
             if sys.version_info > (3, 0):
                 objects.append(pkl.load(f, encoding='latin1'))
@@ -59,7 +60,7 @@ def load_data(dataset_str):
 
     x, y, tx, ty, allx, ally, graph = tuple(objects)
     test_idx_reorder = parse_index_file(
-        "C:\\users\\zhanghao\\graph_net_gcn\\datasets\\coradata\\ind.{}.test.index".format(dataset_str))
+        "./datasets/coradata/ind.{}.test.index".format(dataset_str))
     test_idx_range = np.sort(test_idx_reorder)
 
     if dataset_str == 'citeseer':
