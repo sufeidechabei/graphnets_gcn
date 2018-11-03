@@ -58,6 +58,10 @@ w = np.where(train_mask, 1, 0)
 num_classes = y_train.shape[1]
 input_graphs = []
 
+# make_linear_model is applied to the nodes. it will return a snt.Sequential object
+# output_graph.nodes = make_linear_model()(input_graph.nodes)
+# define the model
+
 
 def make_linear_model():
     if args.layer == 1:
@@ -67,9 +71,16 @@ def make_linear_model():
         layer_list = []
         for layer in range(args.layer - 1):
             layer_list.append(Dropout(args.dropout))
-            layer_list.append(snt.Linear(num_classes))
+            layer_list.append(snt.Linear(args.hidden_units))
             layer_list.append(MultiAdj())
             layer_list.append(ReLu())
+        layer_list.append(Dropout(args.dropout))
+        layer_list.append(snt.Linear(num_classes))
+        layer_list.append(MultiAdj())
+        layer_list.append(ReLu())
+    return snt.Sequential(layer_list)
+
+# Define the Adj matrix (served as the support).
 
 
 class MultiAdj(snt.AbstractModule):
@@ -81,6 +92,8 @@ class MultiAdj(snt.AbstractModule):
         print("mult")
         return tf.matmul(adj, inputs)
 
+# Define the dropout layer
+
 
 class Dropout(snt.AbstractModule):
     def __init__(self, dropout, name='sntdropout'):
@@ -90,6 +103,8 @@ class Dropout(snt.AbstractModule):
     def _build(self, inputs):
         print("dropout")
         return tf.nn.dropout(inputs, 1 - self.dropout)
+
+# Define the activate function.
 
 
 class ReLu(snt.AbstractModule):
@@ -101,15 +116,21 @@ class ReLu(snt.AbstractModule):
         print("relu")
         return tf.nn.relu(inputs)
 
+# Define the GCN model
+
 
 class GCN(snt.AbstractModule):
     def __init__(self, name="gcn"):
         super(GCN, self).__init__(name=name)
         with self._enter_variable_scope():
+            # modules.GraphIndependent is to make the snt.Sequential returned by make_linear_model
+            # apply to the nodes of input_graph equal to output_graph.nodes =
+            # make_linear_model()(input_graph.nodes)
             self._network = modules.GraphIndependent(
                 node_model_fn=make_linear_model)
 
     def _build(self, inputs):
+        # define the forward process
         return self._network(inputs)
 
 
@@ -121,24 +142,44 @@ def make_all_runnable_in_session(*args):
 x = tf.placeholder(shape=[None, features.shape[1]], dtype=tf.float32)
 y = tf.placeholder(shape=[None, y_train.shape[1]], dtype=tf.float32)
 train_mask_holder = tf.placeholder(shape=[None, ], dtype=tf.int32)
+
+# define a Graph object
+
 input_graphs.append({"nodes": x})
 input_graphs = utils_tf.data_dicts_to_graphs_tuple(input_graphs)
 input_graphs = utils_tf.fully_connect_graph_dynamic(input_graphs)
 adj = tf.constant(adj.toarray(), dtype=tf.float32)
 model = GCN()
 input_graph = utils_tf.get_graph(input_graphs, 0)
+
+# the output_graph = make_linear_model()(input_graph)
+# the output_graph.nodes = make_linear_model()(input_graph.nodes)
+
+
 output_graph = model(input_graph)
+
+# Make the graph can be ran in a session
 output_graph, input_graph = make_all_runnable_in_session(
     output_graph, input_graph)
+
+# Define the loss function
 loss = tf.nn.softmax_cross_entropy_with_logits(
     labels=tf.boolean_mask(
         y, train_mask_holder), logits=tf.boolean_mask(
             output_graph.nodes, train_mask_holder))
+
+# Define the optimizer
+
 optimizer = tf.train.AdamOptimizer(learning_rate=args.lr)
 shape = train_mask.shape[0]
 step_op = optimizer.minimize(loss)
 sess = tf.Session()
+
+# Initialize all the variables in the graph.
+
+
 sess.run(tf.global_variables_initializer())
+# Run the GCN model in GPU.
 with tf.device('/gpu:0'):
     t0 = time.time()
     for epoch in range(args.epoch):
