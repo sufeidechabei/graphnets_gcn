@@ -78,7 +78,7 @@ def make_linear_model():
         layer_list.append(snt.Linear(num_classes))
         layer_list.append(MultiAdj())
         layer_list.append(ReLu())
-    return snt.Sequential(layer_list)
+        return snt.Sequential(layer_list)
 
 # Define the Adj matrix (served as the support).
 
