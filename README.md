@@ -1,6 +1,6 @@
 # graphnets_gcn
 
-**Prerequisites**
+## Prerequisites
 1. Linux or OSX
 2. Python 3.6+
 3. Sonnet(deepmind)
