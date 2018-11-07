@@ -26,6 +26,16 @@ We present a scalable approach for semi-supervised learning on graph-structured 
 ["cora"](https://www.dropbox.com/s/3ggdpkj7ou8svoc/cora.zip?dl=1)
 
 
-## References
-["GCN"](https://arxiv.org/abs/1609.02907)
+## Cite
+
+Please cite our paper if you use this code in your own work:
+
+```
+@article{kipf2016semi,
+  title={Semi-Supervised Classification with Graph Convolutional Networks},
+  author={Kipf, Thomas N and Welling, Max},
+  journal={arXiv preprint arXiv:1609.02907},
+  year={2016}
+}
+```
 
