@@ -1,4 +1,4 @@
-# Graph_Nets_Gcn
+# Graph_Nets_GCN
 
 ## Prerequisites
 1. Linux or OSX
