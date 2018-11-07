@@ -1,4 +1,4 @@
-# graphnets_gcn
+# Graph_Nets_Gcn
 
 ## Prerequisites
 1. Linux or OSX
